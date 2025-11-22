@@ -1,3 +1,13 @@
+# about this project
+
+Album A Day is a web app in Svelte 5 that allows users to track and rate entire albums they listen to. The signature feature of the app is a calendar that shows album artworks of each album the user has listened to.
+
+The search functionality uses the Spotify Web API primarily. All app/user data is stored in Redis.
+
+A left side UI panel shows an interface for searching for albums and creating new entries. A right side UI panel shows information on entries that can be opened by clicking on album artwork on the user's calendar.
+
+Once a user creates an album entry, the album name, artist, album artwork, etc. are saved in a Redis database.
+
 link to search documentation spotify
 https://developer.spotify.com/documentation/web-api/reference/search
 
