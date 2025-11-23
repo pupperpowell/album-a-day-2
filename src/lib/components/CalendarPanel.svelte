@@ -2,6 +2,12 @@
 	import AlbumDay from './AlbumDay.svelte';
 	import type { Album } from '$lib/types/album';
 
+	let {
+		onDateSelect
+	}: {
+		onDateSelect?: (date: Date | null) => void;
+	} = $props();
+
 	let currentMonth = $state(new Date().getMonth());
 	let currentYear = $state(new Date().getFullYear());
 	let selectedDate = $state<Date | null>(null);
@@ -51,8 +57,25 @@
 
 	function selectDate(day: number) {
 		selectedDate = new Date(currentYear, currentMonth, day);
+		if (onDateSelect) {
+			onDateSelect(selectedDate);
+		}
 		// TODO: Load album entries for selected date
 		console.log('Selected date:', selectedDate);
+	}
+
+	function handlePanelClick(event: MouseEvent) {
+		// Check if the click was on a calendar day
+		const target = event.target as HTMLElement;
+		const isDayClick = target.closest('.album-day');
+
+		// If clicking outside of calendar days, clear selection
+		if (!isDayClick && selectedDate) {
+			selectedDate = null;
+			if (onDateSelect) {
+				onDateSelect(null);
+			}
+		}
 	}
 
 	function getAlbumForDay(day: number): Album | null {
@@ -66,7 +89,7 @@
 	}
 </script>
 
-<div class="calendar-panel">
+<div class="calendar-panel" onclick={handlePanelClick}>
 	<h2 class="text-center">Album Calendar</h2>
 
 	<div class="calendar-header">

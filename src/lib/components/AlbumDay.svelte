@@ -12,7 +12,7 @@
 	} = $props();
 
 	function handleClick() {
-		if (onclick && album) {
+		if (onclick) {
 			onclick();
 		}
 	}
@@ -23,9 +23,9 @@
 	class:has-album={album}
 	onclick={handleClick}
 	role="button"
-	tabindex={album ? 0 : -1}
+	tabindex={0}
 	onkeydown={(e) => {
-		if ((e.key === 'Enter' || e.key === ' ') && album) {
+		if (e.key === 'Enter' || e.key === ' ') {
 			e.preventDefault();
 			handleClick();
 		}
@@ -66,8 +66,7 @@
 	}
 
 	.album-day:focus {
-		outline: 2px solid #2196f3;
-		outline-offset: 1px;
+		background-color: #ffb74d;
 	}
 
 	.album-day.has-album {

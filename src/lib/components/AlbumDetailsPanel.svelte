@@ -1,9 +1,16 @@
 <script lang="ts">
 	import type { Album } from '$lib/types/album';
 
+	let {
+		selectedDate = $bindable(null)
+	}: {
+		selectedDate?: Date | null;
+	} = $props();
+
 	let selectedAlbum = $state<Album | null>(null);
 
 	function closeDetails() {
+		selectedDate = null;
 		selectedAlbum = null;
 	}
 
@@ -24,66 +31,89 @@
 </script>
 
 <div class="album-details-panel">
-	<h2 class="text-center">Album Details</h2>
+	{#if selectedDate}
+		<div class="panel-content">
+			<h2 class="text-center">Album Details</h2>
 
-	{#if selectedAlbum}
-		<div class="album-info">
-			<div class="album-header">
-				<div class="album-artwork">
-					<img src={selectedAlbum.artwork} alt="{selectedAlbum.name} artwork" />
-				</div>
-				<div class="album-basic-info">
-					<h3>{selectedAlbum.name}</h3>
-					<p class="artist">{selectedAlbum.artist}</p>
-					<p class="release-date">Released: {selectedAlbum.releaseDate}</p>
-				</div>
-			</div>
-
-			<div class="album-metadata">
-				<div class="genres">
-					<h4>Genres</h4>
-					<div class="genre-tags">
-						{#each selectedAlbum.genres as genre}
-							<span class="genre-tag">{genre}</span>
-						{/each}
-					</div>
-				</div>
-
-				<div class="rating">
-					<h4>Your Rating</h4>
-					<div class="rating-display">
-						<span class="rating-number">{selectedAlbum.rating}/10</span>
-						<div class="rating-stars">
-							{#each Array(10) as _, i}
-								<span class="star" class:filled={i < selectedAlbum.rating}>★</span>
-							{/each}
+			{#if selectedAlbum}
+				<div class="album-info">
+					<div class="album-header">
+						<div class="album-artwork">
+							<img src={selectedAlbum.artwork} alt="{selectedAlbum.name} artwork" />
+						</div>
+						<div class="album-basic-info">
+							<h3>{selectedAlbum.name}</h3>
+							<p class="artist">{selectedAlbum.artist}</p>
+							<p class="release-date">Released: {selectedAlbum.releaseDate}</p>
 						</div>
 					</div>
+
+					<div class="album-metadata">
+						<div class="genres">
+							<h4>Genres</h4>
+							<div class="genre-tags">
+								{#each selectedAlbum.genres as genre}
+									<span class="genre-tag">{genre}</span>
+								{/each}
+							</div>
+						</div>
+
+						<div class="rating">
+							<h4>Your Rating</h4>
+							<div class="rating-display">
+								<span class="rating-number">{selectedAlbum.rating}/10</span>
+								<div class="rating-stars">
+									{#each Array(10) as _, i}
+										<span class="star" class:filled={i < selectedAlbum.rating}>★</span>
+									{/each}
+								</div>
+							</div>
+						</div>
+
+						<div class="listen-date">
+							<h4>Listened On</h4>
+							<p>{selectedAlbum.listenDate.toLocaleDateString()}</p>
+						</div>
+					</div>
+
+					<div class="notes">
+						<h4>Your Notes</h4>
+						<p class="notes-content">{selectedAlbum.notes || 'No notes added'}</p>
+					</div>
+
+					<div class="actions">
+						<button onclick={editEntry}>Edit Entry</button>
+						<button onclick={deleteEntry} class="delete-btn">Delete Entry</button>
+						<button onclick={closeDetails}>Close</button>
+					</div>
 				</div>
-
-				<div class="listen-date">
-					<h4>Listened On</h4>
-					<p>{selectedAlbum.listenDate.toLocaleDateString()}</p>
+			{:else}
+				<div class="date-selection">
+					<div class="selected-date">
+						<h3>Selected Date</h3>
+						<p class="date-display">
+							{selectedDate.toLocaleDateString('en-US', {
+								weekday: 'long',
+								year: 'numeric',
+								month: 'long',
+								day: 'numeric'
+							})}
+						</p>
+					</div>
+					<div class="no-album">
+						<div class="placeholder-icon">🎵</div>
+						<p>No album found for this date</p>
+						<p class="hint">Add an album entry for this date to see details here</p>
+					</div>
+					<div class="actions">
+						<button onclick={closeDetails}>Close</button>
+					</div>
 				</div>
-			</div>
-
-			<div class="notes">
-				<h4>Your Notes</h4>
-				<p class="notes-content">{selectedAlbum.notes || 'No notes added'}</p>
-			</div>
-
-			<div class="actions">
-				<button onclick={editEntry}>Edit Entry</button>
-				<button onclick={deleteEntry} class="delete-btn">Delete Entry</button>
-				<button onclick={closeDetails}>Close</button>
-			</div>
+			{/if}
 		</div>
 	{:else}
-		<div class="no-selection">
-			<div class="placeholder-icon">🎵</div>
-			<p>Select an album from the calendar to view details</p>
-			<p class="hint">Click on any date that has album artwork to see more information</p>
-		</div>
+		<!-- Empty panel with just border -->
+		<div class="empty-panel"></div>
 	{/if}
 </div>
 
@@ -91,8 +121,21 @@
 	.album-details-panel {
 		display: flex;
 		flex-direction: column;
+		height: 100%;
+		overflow: hidden;
+	}
+
+	.panel-content {
+		display: flex;
+		flex-direction: column;
 		gap: 1rem;
 		height: 100%;
+		padding: 1rem;
+	}
+
+	.empty-panel {
+		height: 100%;
+		/* Just the border from the parent is visible */
 	}
 
 	.album-info {
@@ -100,6 +143,42 @@
 		flex-direction: column;
 		gap: 1rem;
 		flex: 1;
+	}
+
+	.date-selection {
+		display: flex;
+		flex-direction: column;
+		gap: 1rem;
+		flex: 1;
+	}
+
+	.selected-date {
+		text-align: center;
+		padding: 1rem;
+		background-color: #f5f5f5;
+		border-radius: 4px;
+	}
+
+	.selected-date h3 {
+		margin: 0 0 0.5rem 0;
+		color: #333;
+	}
+
+	.date-display {
+		font-size: 1.1rem;
+		font-weight: 600;
+		color: #2196f3;
+		margin: 0;
+	}
+
+	.no-album {
+		display: flex;
+		flex-direction: column;
+		align-items: center;
+		justify-content: center;
+		text-align: center;
+		flex: 1;
+		gap: 1rem;
 	}
 
 	.album-header {
