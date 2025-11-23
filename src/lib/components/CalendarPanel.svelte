@@ -29,6 +29,8 @@
 		return new Date(currentYear, currentMonth, 1).getDay();
 	});
 
+	const trailingDays = $derived((7 - ((firstDayOfMonth() + daysInMonth()) % 7)) % 7);
+
 	function previousMonth() {
 		if (currentMonth === 0) {
 			currentMonth = 11;
@@ -65,7 +67,7 @@
 </script>
 
 <div class="calendar-panel">
-	<h2>Album Calendar</h2>
+	<h2 class="text-center">Album Calendar</h2>
 
 	<div class="calendar-header">
 		<button onclick={previousMonth}>‹</button>
@@ -84,12 +86,12 @@
 		<div class="day-header">Sat</div>
 
 		<!-- Empty cells for days before month starts -->
-		{#each Array(firstDayOfMonth) as _}
+		{#each Array(firstDayOfMonth()) as _}
 			<div class="day-cell empty"></div>
 		{/each}
 
 		<!-- Days of the month -->
-		{#each Array(daysInMonth) as _, i}
+		{#each Array(daysInMonth()) as _, i}
 			{@const day = i + 1}
 			{@const album = getAlbumForDay(day)}
 			<AlbumDay
@@ -100,6 +102,11 @@
 					if (album) handleAlbumClick(album);
 				}}
 			/>
+		{/each}
+
+		<!-- Empty cells for days after month ends -->
+		{#each Array(trailingDays) as _}
+			<div class="day-cell empty"></div>
 		{/each}
 	</div>
 
@@ -142,7 +149,7 @@
 
 	.day-cell {
 		border: 1px solid #ddd;
-		min-height: 80px;
+		aspect-ratio: 1 / 1;
 		padding: 0.25rem;
 		cursor: pointer;
 		display: flex;

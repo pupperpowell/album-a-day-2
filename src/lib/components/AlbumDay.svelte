@@ -49,7 +49,7 @@
 <style>
 	.album-day {
 		border: 1px solid #ddd;
-		min-height: 80px;
+		aspect-ratio: 1 / 1;
 		padding: 0.25rem;
 		cursor: pointer;
 		display: flex;

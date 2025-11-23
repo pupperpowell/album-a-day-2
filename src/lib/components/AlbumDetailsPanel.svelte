@@ -24,7 +24,7 @@
 </script>
 
 <div class="album-details-panel">
-	<h2>Album Details</h2>
+	<h2 class="text-center">Album Details</h2>
 
 	{#if selectedAlbum}
 		<div class="album-info">
