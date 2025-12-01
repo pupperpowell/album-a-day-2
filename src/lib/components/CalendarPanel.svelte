@@ -3,14 +3,15 @@
 	import type { Album } from '$lib/types/album';
 
 	let {
-		onDateSelect
+		onDateSelect,
+		selectedDate = $bindable(null)
 	}: {
 		onDateSelect?: (date: Date | null) => void;
+		selectedDate?: Date | null;
 	} = $props();
 
 	let currentMonth = $state(new Date().getMonth());
 	let currentYear = $state(new Date().getFullYear());
-	let selectedDate = $state<Date | null>(null);
 
 	const monthNames = [
 		'January',
@@ -64,20 +65,6 @@
 		console.log('Selected date:', selectedDate);
 	}
 
-	function handlePanelClick(event: MouseEvent) {
-		// Check if the click was on a calendar day
-		const target = event.target as HTMLElement;
-		const isDayClick = target.closest('.album-day');
-
-		// If clicking outside of calendar days, clear selection
-		if (!isDayClick && selectedDate) {
-			selectedDate = null;
-			if (onDateSelect) {
-				onDateSelect(null);
-			}
-		}
-	}
-
 	function getAlbumForDay(day: number): Album | null {
 		// TODO: Return album data for specific day
 		return null;
@@ -89,7 +76,7 @@
 	}
 </script>
 
-<div class="calendar-panel" onclick={handlePanelClick}>
+<div class="calendar-panel">
 	<h2 class="text-center">Album Calendar</h2>
 
 	<div class="calendar-header">

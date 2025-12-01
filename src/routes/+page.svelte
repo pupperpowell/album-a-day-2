@@ -13,6 +13,25 @@
 	function handleDateSelect(date: Date | null) {
 		selectedDate = date;
 	}
+
+	function handleGlobalClick(event: MouseEvent) {
+		// Check if the click was inside the calendar panel
+		const target = event.target as HTMLElement;
+		const isInsideCalendar = target.closest('.calendar-panel');
+
+		// If clicking outside the calendar and there's a selected date, clear it
+		if (!isInsideCalendar && selectedDate) {
+			selectedDate = null;
+		}
+	}
+
+	// Add global click listener when component mounts
+	$effect(() => {
+		document.addEventListener('click', handleGlobalClick);
+		return () => {
+			document.removeEventListener('click', handleGlobalClick);
+		};
+	});
 </script>
 
 <div class="dashboard-container" class:search-active={isSearchActive}>
@@ -23,7 +42,7 @@
 
 	<!-- Calendar Panel - Center -->
 	<div class="panel calendar-panel">
-		<CalendarPanel onDateSelect={handleDateSelect} />
+		<CalendarPanel onDateSelect={handleDateSelect} bind:selectedDate />
 	</div>
 
 	<!-- Album Details Panel - Right Side -->
