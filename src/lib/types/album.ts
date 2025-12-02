@@ -29,4 +29,5 @@ export interface SpotifyAlbum {
 		spotify: string;
 	};
 	genres?: string[];
+	album_type: string;
 }

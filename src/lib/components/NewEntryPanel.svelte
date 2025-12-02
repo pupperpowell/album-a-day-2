@@ -36,7 +36,8 @@
 					throw new Error('Search failed');
 				}
 				const data = await response.json();
-				searchResults = data.albums || [];
+				const rawResults = data.albums || [];
+				searchResults = filterAlbums(rawResults);
 			} catch (error) {
 				console.error('Search error:', error);
 				searchError = 'Failed to search albums. Please try again.';
@@ -45,6 +46,28 @@
 				isLoading = false;
 			}
 		}, 500); // 500ms debounce
+	}
+
+	// Filter albums to only include albums and remove duplicates
+	function filterAlbums(albums: SpotifyAlbum[]): SpotifyAlbum[] {
+		// First filter to only include albums (not singles, compilations, etc.)
+		const albumTypeFiltered = albums.filter((album) => album.album_type === 'album');
+
+		// Then remove duplicates (same name and same primary artist ID)
+		const seen = new Set<string>();
+		const deduplicated = albumTypeFiltered.filter((album) => {
+			const primaryArtist = album.artists[0];
+			if (!primaryArtist) return false;
+
+			const key = `${album.name.toLowerCase()}-${primaryArtist.id}`;
+			if (seen.has(key)) {
+				return false; // Skip duplicate
+			}
+			seen.add(key);
+			return true;
+		});
+
+		return deduplicated;
 	}
 
 	// Watch for search query changes
