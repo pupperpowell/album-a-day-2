@@ -14,12 +14,12 @@ https://developer.spotify.com/dashboard/a8c95f7ab27443cdad962dd8547bf8a4
 
 # in progress / up next
 
-- "new entry" panel
+- log in with spotify
 - users in database
 
 # todo
 
-- store results in a database (or filesystem for album artwork)
+- "new entry" panel
 - configure search for albums using sqlite first, then also spotify web api
 - allow for multiple album artworks per album in case users need to change it
 

@@ -152,7 +152,7 @@
 
 	.day-header {
 		text-align: center;
-		font-weight: bold;
+		/* font-weight: bold; */
 		padding: 0.5rem;
 		border-bottom: 1px solid #ccc;
 	}
@@ -186,7 +186,7 @@
 	}
 
 	.day-number {
-		font-weight: bold;
+		/* font-weight: bold; */
 		margin-bottom: 0.25rem;
 	}
 

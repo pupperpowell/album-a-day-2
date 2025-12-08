@@ -75,7 +75,7 @@
 	}
 
 	.day-number {
-		font-weight: bold;
+		/* font-weight: bold; */
 		margin-bottom: 0.25rem;
 		font-size: 0.9rem;
 		color: #333;
