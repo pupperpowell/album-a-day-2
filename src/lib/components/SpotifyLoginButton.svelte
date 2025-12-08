@@ -1,9 +1,10 @@
 <script lang="ts">
 	let { onclick }: { onclick?: () => void } = $props();
+	import spotify from '$lib/assets/Primary_Logo_Green_CMYK.svg';
 </script>
 
 <button class="spotify-login-btn" {onclick}>
-	<img src="/spotify.svg" alt="Spotify logo" />
+	<img src={spotify} alt="Spotify logo" />
 	Log in with Spotify
 </button>
 
@@ -28,7 +29,8 @@
 	}
 
 	.spotify-login-btn img {
-		width: 20px;
-		height: 20px;
+		filter: brightness(0) invert(1);
+		width: 25px;
+		height: 25px;
 	}
 </style>
