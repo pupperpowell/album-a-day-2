@@ -10,7 +10,7 @@
 </script>
 
 <button class="spotify-login-btn" onclick={handleSpotifyLogin}>
-	<img src={spotify} alt="Spotify logo" />
+	<img src={spotify} alt="logo" />
 	Log in with Spotify
 </button>
 

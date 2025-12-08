@@ -1,8 +1,18 @@
 <script lang="ts">
 	import { authClient } from '$lib/auth.js';
-	import type { User } from 'better-auth/types';
 
-	let { user }: { user: User } = $props();
+	interface UserProfile {
+		id: string;
+		name: string;
+		email: string;
+		username?: string | null;
+		image?: string | null;
+		emailVerified: boolean;
+		createdAt: Date;
+		updatedAt: Date;
+	}
+
+	let { user }: { user: UserProfile } = $props();
 
 	async function handleSignOut() {
 		await authClient.signOut();
@@ -17,6 +27,9 @@
 	<div class="user-info">
 		<h3>{user.name}</h3>
 		<p>{user.email}</p>
+		{#if user.username}
+			<a href="/{user.username}" class="view-profile-link">View Profile</a>
+		{/if}
 		<button onclick={handleSignOut} class="sign-out-btn">Sign Out</button>
 	</div>
 </div>
@@ -46,9 +59,24 @@
 	}
 
 	.user-info p {
-		margin: 0 0 12px 0;
+		margin: 0 0 8px 0;
 		color: #64748b;
 		font-size: 14px;
+	}
+
+	.view-profile-link {
+		display: inline-block;
+		margin-bottom: 12px;
+		color: #3b82f6;
+		text-decoration: none;
+		font-size: 14px;
+		font-weight: 500;
+		transition: color 0.2s;
+	}
+
+	.view-profile-link:hover {
+		color: #2563eb;
+		text-decoration: underline;
 	}
 
 	.sign-out-btn {
