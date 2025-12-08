@@ -38,9 +38,9 @@
 	});
 </script>
 
-<div class="dashboard-header">
+<!-- <div class="dashboard-header">
 	<UserProfile {user} />
-</div>
+</div> -->
 
 <div class="dashboard-container" class:search-active={isSearchActive}>
 	<!-- New Entry Panel - Left Side -->
@@ -60,26 +60,12 @@
 </div>
 
 <style>
-	.dashboard-header {
-		position: fixed;
-		top: 0;
-		left: 0;
-		right: 0;
-		z-index: 100;
-		background: white;
-		border-bottom: 1px solid #e2e8f0;
-		padding: 1rem 1rem 0 1rem;
-		display: flex;
-		justify-content: flex-end;
-	}
-
 	.dashboard-container {
 		display: grid;
 		grid-template-columns: 1fr 2fr 1fr;
 		gap: 1rem;
 		height: 100vh;
-		padding: 1rem;
-		padding-top: 120px;
+		padding: 2rem;
 		transition: grid-template-columns 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94);
 	}
 

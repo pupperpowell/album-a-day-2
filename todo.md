@@ -14,17 +14,16 @@ https://developer.spotify.com/dashboard/a8c95f7ab27443cdad962dd8547bf8a4
 
 # in progress / up next
 
-- log in with spotify
-- users in database
-
 # todo
 
-- "new entry" panel
+- full "new entry" panel that saves entries in database
+- mobile layout
 - configure search for albums using sqlite first, then also spotify web api
-- allow for multiple album artworks per album in case users need to change it
 
 # completed
 
+- users in database
+- log in with spotify
 - "calendar" panel, including "album-day" component
 - "entry details" panel
 - search for albums using spotify web api
