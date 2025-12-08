@@ -4,38 +4,37 @@ export const user = sqliteTable('user', {
 	id: text('id').primaryKey().$defaultFn(() => crypto.randomUUID()),
 	name: text('name').notNull(),
 	email: text('email').notNull().unique(),
-	emailVerified: integer('emailVerified', { mode: 'boolean' }).notNull().default(false),
+	emailVerified: integer('email_verified', { mode: 'boolean' }).notNull().default(false),
 	image: text('image'),
-	createdAt: integer('createdAt', { mode: 'timestamp' }).notNull().$defaultFn(() => new Date()),
-	updatedAt: integer('updatedAt', { mode: 'timestamp' }).notNull().$defaultFn(() => new Date()),
-	age: integer('age')
+	createdAt: integer('created_at', { mode: 'timestamp' }).notNull().$defaultFn(() => new Date()),
+	updatedAt: integer('updated_at', { mode: 'timestamp' }).notNull().$defaultFn(() => new Date())
 });
 
 export const session = sqliteTable('session', {
 	id: text('id').primaryKey(),
-	expiresAt: integer('expiresAt', { mode: 'timestamp' }).notNull(),
+	expiresAt: integer('expires_at', { mode: 'timestamp' }).notNull(),
 	token: text('token').notNull().unique(),
-	createdAt: integer('createdAt', { mode: 'timestamp' }).notNull().$defaultFn(() => new Date()),
-	updatedAt: integer('updatedAt', { mode: 'timestamp' }).notNull().$defaultFn(() => new Date()),
-	ipAddress: text('ipAddress'),
-	userAgent: text('userAgent'),
-	userId: text('userId').notNull().references(() => user.id, { onDelete: 'cascade' })
+	createdAt: integer('created_at', { mode: 'timestamp' }).notNull().$defaultFn(() => new Date()),
+	updatedAt: integer('updated_at', { mode: 'timestamp' }).notNull().$defaultFn(() => new Date()),
+	ipAddress: text('ip_address'),
+	userAgent: text('user_agent'),
+	userId: text('user_id').notNull().references(() => user.id, { onDelete: 'cascade' })
 });
 
 export const account = sqliteTable('account', {
 	id: text('id').primaryKey().$defaultFn(() => crypto.randomUUID()),
-	accountId: text('accountId').notNull(),
-	providerId: text('providerId').notNull(),
-	userId: text('userId').notNull().references(() => user.id, { onDelete: 'cascade' }),
-	accessToken: text('accessToken'),
-	refreshToken: text('refreshToken'),
-	idToken: text('idToken'),
-	accessTokenExpiresAt: integer('accessTokenExpiresAt', { mode: 'timestamp' }),
-	refreshTokenExpiresAt: integer('refreshTokenExpiresAt', { mode: 'timestamp' }),
+	accountId: text('account_id').notNull(),
+	providerId: text('provider_id').notNull(),
+	userId: text('user_id').notNull().references(() => user.id, { onDelete: 'cascade' }),
+	accessToken: text('access_token'),
+	refreshToken: text('refresh_token'),
+	idToken: text('id_token'),
+	accessTokenExpiresAt: integer('access_token_expires_at', { mode: 'timestamp' }),
+	refreshTokenExpiresAt: integer('refresh_token_expires_at', { mode: 'timestamp' }),
 	scope: text('scope'),
 	password: text('password'),
-	createdAt: integer('createdAt', { mode: 'timestamp' }).notNull().$defaultFn(() => new Date()),
-	updatedAt: integer('updatedAt', { mode: 'timestamp' }).notNull().$defaultFn(() => new Date())
+	createdAt: integer('created_at', { mode: 'timestamp' }).notNull().$defaultFn(() => new Date()),
+	updatedAt: integer('updated_at', { mode: 'timestamp' }).notNull().$defaultFn(() => new Date())
 });
 
 export const verification = sqliteTable('verification', {
