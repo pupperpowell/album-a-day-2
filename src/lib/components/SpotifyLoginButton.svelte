@@ -1,9 +1,15 @@
 <script lang="ts">
-	let { onclick }: { onclick?: () => void } = $props();
+	import { authClient } from '$lib/auth.js';
 	import spotify from '$lib/assets/Primary_Logo_Green_CMYK.svg';
+
+	async function handleSpotifyLogin() {
+		await authClient.signIn.social({
+			provider: 'spotify'
+		});
+	}
 </script>
 
-<button class="spotify-login-btn" {onclick}>
+<button class="spotify-login-btn" onclick={handleSpotifyLogin}>
 	<img src={spotify} alt="Spotify logo" />
 	Log in with Spotify
 </button>
