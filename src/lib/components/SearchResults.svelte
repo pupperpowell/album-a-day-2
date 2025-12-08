@@ -44,7 +44,7 @@
 		</div>
 	{:else if albums.length === 0}
 		<div class="empty-state">
-			<p>No albums found. Try a different search term.</p>
+			<p>No albums found.</p>
 		</div>
 	{:else}
 		<div class="albums-grid">
@@ -187,6 +187,7 @@
 		line-height: 1.2;
 		margin: 0;
 		color: #333;
+		line-clamp: 2;
 		display: -webkit-box;
 		-webkit-line-clamp: 2;
 		-webkit-box-orient: vertical;
@@ -198,6 +199,7 @@
 		color: #666;
 		margin: 0;
 		display: -webkit-box;
+		line-clamp: 1;
 		-webkit-line-clamp: 1;
 		-webkit-box-orient: vertical;
 		overflow: hidden;

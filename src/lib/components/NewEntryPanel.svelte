@@ -13,6 +13,7 @@
 	let isLoading = $state(false);
 	let searchError = $state<string | null>(null);
 	let searchTimeout: ReturnType<typeof setTimeout> | null = null;
+	let entryInProgress = $state(false);
 
 	// Debounced search function
 	function performSearch() {
@@ -91,9 +92,41 @@
 		rating = 0;
 		notes = '';
 	}
+
+	function handleSearchInput() {
+		if (!entryInProgress && searchQuery.trim()) {
+			entryInProgress = true;
+			onSearchActiveChange?.(true);
+		}
+	}
+
+	function handleKeydown(event: KeyboardEvent) {
+		if (event.key === 'Escape') {
+			handleEntryCancel();
+		} else if (event.key === 'Enter' && selectedAlbum && rating >= 1 && rating <= 10) {
+			handleEntryComplete();
+		}
+	}
+
+	function handleEntryComplete() {
+		createEntry();
+		entryInProgress = false;
+		clearSelection();
+		searchQuery = '';
+		searchResults = [];
+		onSearchActiveChange?.(false);
+	}
+
+	function handleEntryCancel() {
+		entryInProgress = false;
+		clearSelection();
+		searchQuery = '';
+		searchResults = [];
+		onSearchActiveChange?.(false);
+	}
 </script>
 
-<div class="new-entry-panel">
+<div class="new-entry-panel" class:entry-in-progress={entryInProgress}>
 	<h2 class="text-center">New Entry</h2>
 
 	<div class="search-section">
@@ -102,13 +135,13 @@
 			type="text"
 			bind:value={searchQuery}
 			placeholder="Enter album or artist name"
-			onfocus={() => onSearchActiveChange?.(true)}
-			onblur={() => onSearchActiveChange?.(false)}
+			oninput={handleSearchInput}
+			onkeydown={handleKeydown}
 		/>
 	</div>
 
 	<!-- Search Results -->
-	{#if searchQuery.trim() || searchResults.length > 0}
+	{#if searchQuery.trim() && searchResults.length > 0 && !selectedAlbum}
 		<div class="album-selection">
 			<h3>Search Results</h3>
 			<SearchResults
@@ -168,9 +201,15 @@
 				></textarea>
 			</div>
 
-			<button onclick={createEntry} disabled={!selectedAlbum || rating < 1 || rating > 10}>
-				Create Entry
-			</button>
+			<div class="entry-actions">
+				<button onclick={handleEntryCancel} class="cancel-btn"> Cancel </button>
+				<button
+					onclick={handleEntryComplete}
+					disabled={!selectedAlbum || rating < 1 || rating > 10}
+				>
+					Create Entry
+				</button>
+			</div>
 		</div>
 	{/if}
 </div>
@@ -180,6 +219,13 @@
 		display: flex;
 		flex-direction: column;
 		gap: 1rem;
+		transition: all 0.3s ease;
+	}
+
+	.new-entry-panel.entry-in-progress {
+		border: 2px solid #3498db;
+		border-radius: 8px;
+		background-color: rgba(52, 152, 219, 0.05);
 	}
 
 	.search-section,
