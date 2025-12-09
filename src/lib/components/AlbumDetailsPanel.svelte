@@ -31,11 +31,8 @@
 
 	// Watch for selectedDate changes and load album data if needed
 	$effect(() => {
-		if (selectedDate && !selectedAlbum) {
-			// In a real implementation, you might want to fetch the album data here
-			// For now, we'll just clear the selected album if the date changes
-			selectedAlbum = null;
-		}
+		// This effect is now handled by the parent component
+		// We don't need to automatically clear the album here
 	});
 </script>
 

@@ -31,11 +31,6 @@
 		selectedDate = date;
 		// Also update the entry date when a date is selected from calendar
 		entryDate = date;
-
-		// Clear the selected album when date changes (will be set again if album is selected)
-		if (albumDetailsRef) {
-			albumDetailsRef.selectAlbum(null);
-		}
 	}
 
 	function handleAlbumSelect(album: Album) {
@@ -72,6 +67,15 @@
 			selectedDate = null;
 		}
 	}
+
+	// Watch for changes in selectedDate and albumDetailsRef to select the appropriate album
+	$effect(() => {
+		if (selectedDate && albumDetailsRef && albumMap) {
+			const dateKey = selectedDate.toISOString().split('T')[0];
+			const album = albumMap[dateKey];
+			albumDetailsRef.selectAlbum(album || null);
+		}
+	});
 
 	// Add global click listener when component mounts
 	$effect(() => {

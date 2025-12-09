@@ -19,7 +19,8 @@ https://developer.spotify.com/dashboard/a8c95f7ab27443cdad962dd8547bf8a4
 - profile page shows album streak
 - logout button
 - mobile layout
-- configure search for albums using sqlite first, then also spotify web api
+- handle strange ratings (< 0 or > 10)
+-
 
 # completed
 

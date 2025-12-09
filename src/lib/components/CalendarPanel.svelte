@@ -159,7 +159,7 @@
 				{isNewEntryFocused}
 				onclick={() => {
 					selectDate(day);
-					if (album) handleAlbumClick(album);
+					// Don't handle album click here - let the parent handle album selection based on the date
 				}}
 			/>
 		{/each}
