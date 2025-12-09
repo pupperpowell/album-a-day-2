@@ -1,19 +1,31 @@
 <script lang="ts">
 	import SearchResults from './SearchResults.svelte';
-	import type { SpotifyAlbum, Album } from '$lib/types/album';
+	import type { SpotifyAlbum, Album, SpotifyTrack } from '$lib/types/album';
 	import { spotifyToAlbum } from '$lib/utils/album';
 
-	let { onSearchActiveChange } = $props();
+	let { onSearchActiveChange, selectedDate = $bindable(null) } = $props();
 	let searchQuery = $state('');
 	let searchResults = $state<SpotifyAlbum[]>([]);
 	let selectedSpotifyAlbum = $state<SpotifyAlbum | null>(null);
 	let selectedAlbum = $state<Omit<Album, 'rating' | 'notes' | 'listenDate'> | null>(null);
 	let rating = $state(0);
 	let notes = $state('');
+	let listenDate = $state<Date | null>(selectedDate || null);
+	let listenDateString = $derived(listenDate ? listenDate.toISOString().split('T')[0] : '');
+
+	// Update listenDate when selectedDate changes
+	$effect(() => {
+		if (selectedDate) {
+			listenDate = selectedDate;
+		}
+	});
 	let isLoading = $state(false);
 	let searchError = $state<string | null>(null);
 	let searchTimeout: ReturnType<typeof setTimeout> | null = null;
 	let entryInProgress = $state(false);
+	let albumTracks = $state<SpotifyTrack[]>([]);
+	let selectedFavoriteTrack = $state<string>('');
+	let isLoadingTracks = $state(false);
 
 	// Debounced search function
 	function performSearch() {
@@ -76,14 +88,73 @@
 		performSearch();
 	});
 
-	function handleAlbumSelect(album: SpotifyAlbum) {
+	async function handleAlbumSelect(album: SpotifyAlbum) {
 		selectedSpotifyAlbum = album;
 		selectedAlbum = spotifyToAlbum(album);
+		selectedFavoriteTrack = '';
+		albumTracks = [];
+
+		// Clear the selected date when an album is selected
+		selectedDate = null;
+		listenDate = null;
+
+		// Fetch tracks for the selected album
+		await fetchAlbumTracks(album.id);
 	}
 
-	function createEntry() {
-		// TODO: Implement entry creation
-		console.log('Creating entry:', { selectedAlbum, rating, notes });
+	async function fetchAlbumTracks(albumId: string) {
+		isLoadingTracks = true;
+		try {
+			const response = await fetch(`/api/albums/${albumId}/tracks`);
+			if (!response.ok) {
+				throw new Error('Failed to fetch album tracks');
+			}
+			const data = await response.json();
+			albumTracks = data.album.tracks.items;
+		} catch (error) {
+			console.error('Error fetching album tracks:', error);
+		} finally {
+			isLoadingTracks = false;
+		}
+	}
+
+	async function createEntry() {
+		if (!selectedAlbum || !listenDate) {
+			console.error('Missing required data for entry creation');
+			return;
+		}
+
+		try {
+			const response = await fetch('/api/entries', {
+				method: 'POST',
+				headers: {
+					'Content-Type': 'application/json'
+				},
+				body: JSON.stringify({
+					album: selectedAlbum,
+					tracks: albumTracks,
+					rating: rating,
+					notes: notes,
+					listenDate: listenDate.toISOString(),
+					favoriteTrackId: selectedFavoriteTrack || null
+				})
+			});
+
+			if (!response.ok) {
+				const errorData = await response.json();
+				throw new Error(errorData.message || 'Failed to create entry');
+			}
+
+			const result = await response.json();
+			console.log('Entry created successfully:', result);
+
+			// Show success message or handle success state
+			// You could add a toast notification here
+		} catch (error) {
+			console.error('Error creating entry:', error);
+			// Show error message to user
+			// You could add a toast notification here
+		}
 	}
 
 	function clearSelection() {
@@ -91,6 +162,10 @@
 		selectedAlbum = null;
 		rating = 0;
 		notes = '';
+		albumTracks = [];
+		selectedFavoriteTrack = '';
+		// Reset listen date to selected date or null
+		listenDate = selectedDate || null;
 	}
 
 	function handleSearchInput() {
@@ -103,13 +178,13 @@
 	function handleKeydown(event: KeyboardEvent) {
 		if (event.key === 'Escape') {
 			handleEntryCancel();
-		} else if (event.key === 'Enter' && selectedAlbum && rating >= 1 && rating <= 10) {
+		} else if (event.key === 'Enter' && selectedAlbum && rating >= -100 && rating <= 100) {
 			handleEntryComplete();
 		}
 	}
 
-	function handleEntryComplete() {
-		createEntry();
+	async function handleEntryComplete() {
+		await createEntry();
 		entryInProgress = false;
 		clearSelection();
 		searchQuery = '';
@@ -192,20 +267,65 @@
 
 			<div class="rating-section">
 				<label for="rating">Rating</label>
-				<input id="rating" type="number" min="1" max="10" bind:value={rating} placeholder="1-10" />
+				<div class="rating-input-container">
+					<input
+						id="rating"
+						type="number"
+						min="-100"
+						max="100"
+						bind:value={rating}
+						placeholder="0-10"
+					/>
+					<span class="rating-suffix"> / 10</span>
+				</div>
+			</div>
+
+			<div class="favorite-track-section">
+				<label for="favorite-track">Favorite Track</label>
+				<select
+					id="favorite-track"
+					bind:value={selectedFavoriteTrack}
+					disabled={isLoadingTracks || albumTracks.length === 0}
+				>
+					<option value="">Select a track...</option>
+					{#if isLoadingTracks}
+						<option value="" disabled>Loading tracks...</option>
+					{:else if albumTracks.length === 0}
+						<option value="" disabled>No tracks available</option>
+					{:else}
+						{#each albumTracks as track}
+							<option value={track.id}>{track.track_number}. {track.name}</option>
+						{/each}
+					{/if}
+				</select>
+			</div>
+
+			<div class="date-listened-section">
+				<label>Date Listened</label>
+				{#if listenDate}
+					<div class="selected-date-display">
+						{listenDate.toLocaleDateString('en-US', {
+							weekday: 'long',
+							year: 'numeric',
+							month: 'long',
+							day: 'numeric'
+						})}
+					</div>
+				{:else}
+					<div class="date-instruction">Click a date on the calendar to select</div>
+				{/if}
 			</div>
 
 			<div class="notes-section">
 				<label for="notes">Notes</label>
-				<textarea id="notes" bind:value={notes} placeholder="Your thoughts on this album..."
-				></textarea>
+				<textarea id="notes" bind:value={notes} placeholder="Your thoughts"></textarea>
 			</div>
 
 			<div class="entry-actions">
 				<button onclick={handleEntryCancel} class="cancel-btn"> Cancel </button>
 				<button
 					onclick={handleEntryComplete}
-					disabled={!selectedAlbum || rating < 1 || rating > 10}
+					disabled={!selectedAlbum || rating < -100 || rating > 100}
 				>
 					Create Entry
 				</button>
@@ -330,13 +450,34 @@
 	}
 
 	.rating-section,
+	.favorite-track-section,
+	.date-listened-section,
 	.notes-section {
 		display: flex;
 		flex-direction: column;
 		gap: 0.5rem;
 	}
 
-	.rating-section input,
+	.rating-input-container {
+		display: flex;
+		align-items: center;
+		gap: 0.5rem;
+	}
+
+	.rating-input-container input {
+		width: 80px;
+		padding: 0.75rem;
+		border: 1px solid #ddd;
+		border-radius: 4px;
+		font-size: 1rem;
+	}
+
+	.rating-suffix {
+		font-size: 1rem;
+		color: #666;
+	}
+
+	.favorite-track-section select,
 	.notes-section textarea {
 		padding: 0.75rem;
 		border: 1px solid #ddd;
@@ -344,11 +485,32 @@
 		font-size: 1rem;
 	}
 
-	.rating-section input:focus,
+	.rating-input-container input:focus,
+	.favorite-track-section select:focus,
 	.notes-section textarea:focus {
 		outline: none;
 		border-color: #3498db;
 		box-shadow: 0 0 0 2px rgba(52, 152, 219, 0.2);
+	}
+
+	.selected-date-display {
+		padding: 0.75rem;
+		background-color: #e3f2fd;
+		border: 1px solid #2196f3;
+		border-radius: 4px;
+		font-size: 1rem;
+		font-weight: 500;
+		color: #1976d2;
+	}
+
+	.date-instruction {
+		padding: 0.75rem;
+		background-color: #fff3cd;
+		border: 1px solid #ffc107;
+		border-radius: 4px;
+		font-size: 0.9rem;
+		color: #856404;
+		font-style: italic;
 	}
 
 	textarea {

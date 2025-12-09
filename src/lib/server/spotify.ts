@@ -1,5 +1,5 @@
 import { env } from '$env/dynamic/private';
-import type { Album, SpotifyAlbum } from '$lib/types/album';
+import type { Album, SpotifyAlbum, SpotifyAlbumWithTracks } from '$lib/types/album';
 
 interface SpotifyToken {
 	access_token: string;
@@ -112,6 +112,35 @@ export async function getAlbumDetails(albumId: string): Promise<SpotifyAlbum> {
 		return await response.json();
 	} catch (error) {
 		console.error('Error getting album details:', error);
+		throw error;
+	}
+}
+
+/**
+	* Get album tracks
+	* @param albumId - Spotify album ID
+	* @returns Album with tracks
+	*/
+export async function getAlbumTracks(albumId: string): Promise<SpotifyAlbumWithTracks> {
+	try {
+		const token = await getAccessToken();
+
+		const response = await fetch(
+			`https://api.spotify.com/v1/albums/${albumId}?market=US`,
+			{
+				headers: {
+					'Authorization': `Bearer ${token}`
+				}
+			}
+		);
+
+		if (!response.ok) {
+			throw new Error(`Failed to get album tracks: ${response.statusText}`);
+		}
+
+		return await response.json();
+	} catch (error) {
+		console.error('Error getting album tracks:', error);
 		throw error;
 	}
 }

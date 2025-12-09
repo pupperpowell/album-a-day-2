@@ -1,17 +1,25 @@
 <script lang="ts">
 	import AlbumDay from './AlbumDay.svelte';
 	import type { Album } from '$lib/types/album';
+	import { imageCache } from '$lib/utils/imageCache';
 
 	let {
 		onDateSelect,
-		selectedDate = $bindable(null)
+		onAlbumSelect,
+		selectedDate = $bindable(null),
+		currentMonth = $bindable(new Date().getMonth()),
+		currentYear = $bindable(new Date().getFullYear()),
+		albumMap = {},
+		onMonthChange
 	}: {
 		onDateSelect?: (date: Date | null) => void;
+		onAlbumSelect?: (album: Album) => void;
 		selectedDate?: Date | null;
+		currentMonth?: number;
+		currentYear?: number;
+		albumMap?: Record<string, Album>;
+		onMonthChange?: (month: number, year: number) => void;
 	} = $props();
-
-	let currentMonth = $state(new Date().getMonth());
-	let currentYear = $state(new Date().getFullYear());
 
 	const monthNames = [
 		'January',
@@ -45,6 +53,10 @@
 		} else {
 			currentMonth--;
 		}
+
+		if (onMonthChange) {
+			onMonthChange(currentMonth, currentYear);
+		}
 	}
 
 	function nextMonth() {
@@ -53,6 +65,10 @@
 			currentYear++;
 		} else {
 			currentMonth++;
+		}
+
+		if (onMonthChange) {
+			onMonthChange(currentMonth, currentYear);
 		}
 	}
 
@@ -65,20 +81,42 @@
 		console.log('Selected date:', selectedDate);
 	}
 
+	function isDateSelected(day: number): boolean {
+		if (!selectedDate) return false;
+		return (
+			selectedDate.getDate() === day &&
+			selectedDate.getMonth() === currentMonth &&
+			selectedDate.getFullYear() === currentYear
+		);
+	}
+
 	function getAlbumForDay(day: number): Album | null {
-		// TODO: Return album data for specific day
-		return null;
+		// Create date string in YYYY-MM-DD format for lookup
+		const dateStr = `${currentYear}-${String(currentMonth + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+		return albumMap[dateStr] || null;
 	}
 
 	function handleAlbumClick(album: Album) {
-		// TODO: Handle album click to show details
-		console.log('Album clicked:', album);
+		if (onAlbumSelect) {
+			onAlbumSelect(album);
+		}
 	}
+
+	// Preload all artwork for the current month
+	$effect(() => {
+		if (albumMap && Object.keys(albumMap).length > 0) {
+			const artworkUrls = Object.values(albumMap)
+				.map((album) => album.artwork)
+				.filter(Boolean);
+
+			if (artworkUrls.length > 0) {
+				imageCache.preloadImages(artworkUrls);
+			}
+		}
+	});
 </script>
 
 <div class="calendar-panel">
-	<h2 class="text-center">Album Calendar</h2>
-
 	<div class="calendar-header">
 		<button onclick={previousMonth}>‹</button>
 		<h3>{monthNames[currentMonth]} {currentYear}</h3>
@@ -107,6 +145,7 @@
 			<AlbumDay
 				{album}
 				{day}
+				selected={isDateSelected(day)}
 				onclick={() => {
 					selectDate(day);
 					if (album) handleAlbumClick(album);
@@ -123,7 +162,6 @@
 	<div class="calendar-info">
 		{#if selectedDate}
 			<p>Selected: {selectedDate.toLocaleDateString()}</p>
-			<!-- TODO: Show albums for selected date -->
 		{:else}
 			<p>Click on a date to see album details</p>
 		{/if}
@@ -152,7 +190,7 @@
 
 	.day-header {
 		text-align: center;
-		/* font-weight: bold; */
+		font-weight: lighter;
 		padding: 0.5rem;
 		border-bottom: 1px solid #ccc;
 	}

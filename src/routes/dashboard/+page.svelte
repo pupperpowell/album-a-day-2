@@ -4,18 +4,57 @@
 	import CalendarPanel from '$lib/components/CalendarPanel.svelte';
 	import AlbumDetailsPanel from '$lib/components/AlbumDetailsPanel.svelte';
 	import UserProfile from '$lib/components/UserProfile.svelte';
+	import type { Album } from '$lib/types/album';
 
 	let user = $derived($page.data.user);
+	let calendarData = $derived($page.data.calendarData);
 
 	let isSearchActive = $state(false);
 	let selectedDate = $state<Date | null>(null);
+	let entryDate = $state<Date | null>(null);
+	let currentMonth = $state(calendarData?.month || new Date().getMonth());
+	let currentYear = $state(calendarData?.year || new Date().getFullYear());
+	let albumMap = $state<Record<string, Album>>(calendarData?.albumMap || {});
 
 	let handleSearchActiveChange: (active: boolean) => void = (active: boolean) => {
 		isSearchActive = active;
 	};
 
+	let albumDetailsRef: { selectAlbum: (album: Album) => void } | undefined;
+
 	function handleDateSelect(date: Date | null) {
 		selectedDate = date;
+		// Also update the entry date when a date is selected from calendar
+		entryDate = date;
+
+		// Clear the selected album when date changes (will be set again if album is selected)
+		if (albumDetailsRef) {
+			albumDetailsRef.selectAlbum(null);
+		}
+	}
+
+	function handleAlbumSelect(album: Album) {
+		if (albumDetailsRef) {
+			albumDetailsRef.selectAlbum(album);
+		}
+	}
+
+	async function handleMonthChange(month: number, year: number) {
+		currentMonth = month;
+		currentYear = year;
+
+		// Fetch new calendar data for the selected month
+		try {
+			const response = await fetch(`/api/calendar?month=${month}&year=${year}`);
+			if (response.ok) {
+				const data = await response.json();
+				if (data.success) {
+					albumMap = data.data.albumMap;
+				}
+			}
+		} catch (error) {
+			console.error('Error fetching calendar data:', error);
+		}
 	}
 
 	function handleGlobalClick(event: MouseEvent) {
@@ -45,17 +84,25 @@
 <div class="dashboard-container" class:search-active={isSearchActive}>
 	<!-- New Entry Panel - Left Side -->
 	<div class="panel new-entry-panel">
-		<NewEntryPanel onSearchActiveChange={handleSearchActiveChange} />
+		<NewEntryPanel onSearchActiveChange={handleSearchActiveChange} bind:selectedDate={entryDate} />
 	</div>
 
 	<!-- Calendar Panel - Center -->
 	<div class="panel calendar-panel">
-		<CalendarPanel onDateSelect={handleDateSelect} bind:selectedDate />
+		<CalendarPanel
+			onDateSelect={handleDateSelect}
+			onAlbumSelect={handleAlbumSelect}
+			bind:selectedDate
+			{currentMonth}
+			{currentYear}
+			{albumMap}
+			onMonthChange={handleMonthChange}
+		/>
 	</div>
 
 	<!-- Album Details Panel - Right Side -->
 	<div class="panel album-details-panel">
-		<AlbumDetailsPanel {selectedDate} />
+		<AlbumDetailsPanel {selectedDate} bind:this={albumDetailsRef} />
 	</div>
 </div>
 

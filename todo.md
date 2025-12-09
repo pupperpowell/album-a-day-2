@@ -14,14 +14,20 @@ https://developer.spotify.com/dashboard/a8c95f7ab27443cdad962dd8547bf8a4
 
 # in progress / up next
 
+- select a date for the album entry
+- submitting a new entry shows the album artwork on the selected day
+- full "new entry" panel that saves entries in database
+
 # todo
 
-- full "new entry" panel that saves entries in database
+- profile page shows album streak
+- logout button
 - mobile layout
 - configure search for albums using sqlite first, then also spotify web api
 
 # completed
 
+- favorite track selection
 - users in database
 - log in with spotify
 - "calendar" panel, including "album-day" component

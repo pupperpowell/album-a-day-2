@@ -25,9 +25,18 @@
 	}
 
 	// This function would be called from the calendar when an album is selected
-	export function selectAlbum(album: Album) {
+	export function selectAlbum(album: Album | null) {
 		selectedAlbum = album;
 	}
+
+	// Watch for selectedDate changes and load album data if needed
+	$effect(() => {
+		if (selectedDate && !selectedAlbum) {
+			// In a real implementation, you might want to fetch the album data here
+			// For now, we'll just clear the selected album if the date changes
+			selectedAlbum = null;
+		}
+	});
 </script>
 
 <div class="album-details-panel">
