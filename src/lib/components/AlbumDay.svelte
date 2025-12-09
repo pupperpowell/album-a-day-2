@@ -6,11 +6,15 @@
 		album,
 		day,
 		selected = false,
+		isFuture = false,
+		isNewEntryFocused = false,
 		onclick
 	}: {
 		album: Album | null;
 		day: number;
 		selected?: boolean;
+		isFuture?: boolean;
+		isNewEntryFocused?: boolean;
 		onclick?: () => void;
 	} = $props();
 
@@ -59,6 +63,7 @@
 	class="album-day"
 	class:has-album={album}
 	class:selected
+	class:future-dimmed={isFuture && isNewEntryFocused}
 	onclick={handleClick}
 	role="button"
 	tabindex={0}
@@ -211,5 +216,10 @@
 		font-size: 0.7rem;
 		font-weight: bold;
 		box-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
+	}
+
+	.album-day.future-dimmed {
+		opacity: 0.4;
+		pointer-events: none;
 	}
 </style>

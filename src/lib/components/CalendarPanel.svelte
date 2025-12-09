@@ -10,7 +10,8 @@
 		currentMonth = $bindable(new Date().getMonth()),
 		currentYear = $bindable(new Date().getFullYear()),
 		albumMap = {},
-		onMonthChange
+		onMonthChange,
+		isNewEntryFocused = false
 	}: {
 		onDateSelect?: (date: Date | null) => void;
 		onAlbumSelect?: (album: Album) => void;
@@ -19,6 +20,7 @@
 		currentYear?: number;
 		albumMap?: Record<string, Album>;
 		onMonthChange?: (month: number, year: number) => void;
+		isNewEntryFocused?: boolean;
 	} = $props();
 
 	const monthNames = [
@@ -102,6 +104,12 @@
 		}
 	}
 
+	function isDateInFuture(day: number): boolean {
+		const today = new Date();
+		const currentDate = new Date(currentYear, currentMonth, day);
+		return currentDate > today;
+	}
+
 	// Preload all artwork for the current month
 	$effect(() => {
 		if (albumMap && Object.keys(albumMap).length > 0) {
@@ -142,10 +150,13 @@
 		{#each Array(daysInMonth()) as _, i}
 			{@const day = i + 1}
 			{@const album = getAlbumForDay(day)}
+			{@const isFuture = isDateInFuture(day)}
 			<AlbumDay
 				{album}
 				{day}
 				selected={isDateSelected(day)}
+				{isFuture}
+				{isNewEntryFocused}
 				onclick={() => {
 					selectDate(day);
 					if (album) handleAlbumClick(album);
@@ -159,13 +170,13 @@
 		{/each}
 	</div>
 
-	<div class="calendar-info">
+	<!-- <div class="calendar-info">
 		{#if selectedDate}
 			<p>Selected: {selectedDate.toLocaleDateString()}</p>
 		{:else}
 			<p>Click on a date to see album details</p>
 		{/if}
-	</div>
+	</div> -->
 </div>
 
 <style>

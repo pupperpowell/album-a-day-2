@@ -3,7 +3,7 @@
 	import type { SpotifyAlbum, Album, SpotifyTrack } from '$lib/types/album';
 	import { spotifyToAlbum } from '$lib/utils/album';
 
-	let { onSearchActiveChange, selectedDate = $bindable(null) } = $props();
+	let { onSearchActiveChange, selectedDate = $bindable(null), onFocusChange } = $props();
 	let searchQuery = $state('');
 	let searchResults = $state<SpotifyAlbum[]>([]);
 	let selectedSpotifyAlbum = $state<SpotifyAlbum | null>(null);
@@ -23,6 +23,7 @@
 	let searchError = $state<string | null>(null);
 	let searchTimeout: ReturnType<typeof setTimeout> | null = null;
 	let entryInProgress = $state(false);
+	let isPanelFocused = $state(false);
 	let albumTracks = $state<SpotifyTrack[]>([]);
 	let selectedFavoriteTrack = $state<string>('');
 	let isLoadingTracks = $state(false);
@@ -173,6 +174,11 @@
 			entryInProgress = true;
 			onSearchActiveChange?.(true);
 		}
+		// Panel is focused when user starts typing
+		if (!isPanelFocused) {
+			isPanelFocused = true;
+			onFocusChange?.(true);
+		}
 	}
 
 	function handleKeydown(event: KeyboardEvent) {
@@ -190,6 +196,9 @@
 		searchQuery = '';
 		searchResults = [];
 		onSearchActiveChange?.(false);
+		// Panel loses focus after completing entry
+		isPanelFocused = false;
+		onFocusChange?.(false);
 	}
 
 	function handleEntryCancel() {
@@ -198,10 +207,32 @@
 		searchQuery = '';
 		searchResults = [];
 		onSearchActiveChange?.(false);
+		// Panel loses focus after canceling
+		isPanelFocused = false;
+		onFocusChange?.(false);
 	}
 </script>
 
-<div class="new-entry-panel" class:entry-in-progress={entryInProgress}>
+<div
+	class="new-entry-panel"
+	class:entry-in-progress={entryInProgress}
+	onfocus={() => {
+		if (!isPanelFocused) {
+			isPanelFocused = true;
+			onFocusChange?.(true);
+		}
+	}}
+	onblur={() => {
+		// Small delay to allow for focus switching within the panel
+		setTimeout(() => {
+			if (isPanelFocused) {
+				isPanelFocused = false;
+				onFocusChange?.(false);
+			}
+		}, 100);
+	}}
+	tabindex="0"
+>
 	<h2 class="text-center">New Entry</h2>
 
 	<div class="search-section">

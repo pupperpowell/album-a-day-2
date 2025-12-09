@@ -10,6 +10,7 @@
 	let calendarData = $derived($page.data.calendarData);
 
 	let isSearchActive = $state(false);
+	let isNewEntryFocused = $state(false);
 	let selectedDate = $state<Date | null>(null);
 	let entryDate = $state<Date | null>(null);
 	let currentMonth = $state(calendarData?.month || new Date().getMonth());
@@ -20,7 +21,11 @@
 		isSearchActive = active;
 	};
 
-	let albumDetailsRef: { selectAlbum: (album: Album) => void } | undefined;
+	let handleNewEntryFocusChange: (focused: boolean) => void = (focused: boolean) => {
+		isNewEntryFocused = focused;
+	};
+
+	let albumDetailsRef: { selectAlbum: (album: Album | null) => void } | undefined;
 
 	function handleDateSelect(date: Date | null) {
 		selectedDate = date;
@@ -81,10 +86,18 @@
 	<UserProfile {user} />
 </div> -->
 
-<div class="dashboard-container" class:search-active={isSearchActive}>
+<div
+	class="dashboard-container"
+	class:search-active={isSearchActive}
+	class:has-selected-date={selectedDate}
+>
 	<!-- New Entry Panel - Left Side -->
 	<div class="panel new-entry-panel">
-		<NewEntryPanel onSearchActiveChange={handleSearchActiveChange} bind:selectedDate={entryDate} />
+		<NewEntryPanel
+			onSearchActiveChange={handleSearchActiveChange}
+			onFocusChange={handleNewEntryFocusChange}
+			bind:selectedDate={entryDate}
+		/>
 	</div>
 
 	<!-- Calendar Panel - Center -->
@@ -97,13 +110,16 @@
 			{currentYear}
 			{albumMap}
 			onMonthChange={handleMonthChange}
+			{isNewEntryFocused}
 		/>
 	</div>
 
 	<!-- Album Details Panel - Right Side -->
-	<div class="panel album-details-panel">
-		<AlbumDetailsPanel {selectedDate} bind:this={albumDetailsRef} />
-	</div>
+	{#if selectedDate}
+		<div class="panel album-details-panel">
+			<AlbumDetailsPanel {selectedDate} bind:this={albumDetailsRef} />
+		</div>
+	{/if}
 </div>
 
 <style>
@@ -117,6 +133,10 @@
 	}
 
 	.dashboard-container.search-active {
+		grid-template-columns: 1fr 2fr 0fr;
+	}
+
+	.dashboard-container:not(.has-selected-date) {
 		grid-template-columns: 1fr 2fr 0fr;
 	}
 
