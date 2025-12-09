@@ -3,7 +3,12 @@
 	import type { SpotifyAlbum, Album, SpotifyTrack } from '$lib/types/album';
 	import { spotifyToAlbum } from '$lib/utils/album';
 
-	let { onSearchActiveChange, selectedDate = $bindable(null), onFocusChange } = $props();
+	let {
+		onSearchActiveChange,
+		selectedDate = $bindable(null),
+		onFocusChange,
+		onEntryCreated
+	} = $props();
 	let searchQuery = $state('');
 	let searchResults = $state<SpotifyAlbum[]>([]);
 	let selectedSpotifyAlbum = $state<SpotifyAlbum | null>(null);
@@ -199,6 +204,7 @@
 		// Panel loses focus after completing entry
 		isPanelFocused = false;
 		onFocusChange?.(false);
+		onEntryCreated?.();
 	}
 
 	function handleEntryCancel() {

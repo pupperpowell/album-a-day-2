@@ -87,7 +87,7 @@ export const load: PageServerLoad = async ({ locals, url }) => {
 			const dateKey = entry.listenDate.toISOString().split('T')[0];
 			albumMap.set(dateKey, {
 				...entry.album,
-				rating: entry.rating / 10, // Convert from -100 to 100 scale to -10 to 10
+				rating: entry.rating, // Rating stored as 0-10 scale
 				notes: entry.notes,
 				listenDate: entry.listenDate,
 				favoriteTrackId: entry.favoriteTrackId

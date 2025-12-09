@@ -57,6 +57,10 @@
 		}
 	}
 
+	let handleEntryCreated = async () => {
+		await handleMonthChange(currentMonth, currentYear);
+	};
+
 	function handleGlobalClick(event: MouseEvent) {
 		// Check if the click was inside the calendar panel
 		const target = event.target as HTMLElement;
@@ -101,6 +105,7 @@
 			onSearchActiveChange={handleSearchActiveChange}
 			onFocusChange={handleNewEntryFocusChange}
 			bind:selectedDate={entryDate}
+			onEntryCreated={handleEntryCreated}
 		/>
 	</div>
 

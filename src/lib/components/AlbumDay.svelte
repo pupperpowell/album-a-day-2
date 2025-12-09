@@ -24,6 +24,7 @@
 	let randomRotation = $state(0);
 
 	function handleClick() {
+		if (isFuture) return;
 		if (onclick) {
 			onclick();
 		}
@@ -63,7 +64,7 @@
 	class="album-day"
 	class:has-album={album}
 	class:selected
-	class:future-dimmed={isFuture && isNewEntryFocused}
+	class:unavailable-dimmed={isFuture || (!!album && isNewEntryFocused)}
 	onclick={handleClick}
 	role="button"
 	tabindex={0}
@@ -128,12 +129,16 @@
 		box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 	}
 
+	.album-day:hover .album-thumbnail img {
+		transform: scale(1.2);
+	}
+
 	.album-day:focus {
 		background-color: #ffb74d;
 	}
 
 	.album-day.has-album {
-		background-color: #fff3e0;
+		/* background-color: #fff3e0; */
 		border-color: #ffb74d;
 	}
 
@@ -165,7 +170,7 @@
 		align-items: center;
 		justify-content: center;
 		position: relative;
-		margin-top: -8px;
+		margin-top: -16px;
 		min-height: 0;
 	}
 
@@ -218,8 +223,14 @@
 		box-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
 	}
 
-	.album-day.future-dimmed {
+	.album-day.unavailable-dimmed {
 		opacity: 0.4;
 		pointer-events: none;
+		cursor: not-allowed;
+	}
+
+	.album-day.unavailable-dimmed .day-number {
+		color: #999;
+		background-color: rgba(255, 255, 255, 0.5);
 	}
 </style>
