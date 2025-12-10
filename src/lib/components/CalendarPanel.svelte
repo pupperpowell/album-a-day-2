@@ -39,11 +39,11 @@
 	];
 
 	const daysInMonth = $derived(() => {
-		return new Date(currentYear, currentMonth + 1, 0).getDate();
+		return new Date(Date.UTC(currentYear, currentMonth + 1, 0)).getUTCDate();
 	});
 
 	const firstDayOfMonth = $derived(() => {
-		return new Date(currentYear, currentMonth, 1).getDay();
+		return new Date(Date.UTC(currentYear, currentMonth, 1)).getUTCDay();
 	});
 
 	const trailingDays = $derived((7 - ((firstDayOfMonth() + daysInMonth()) % 7)) % 7);
@@ -75,7 +75,7 @@
 	}
 
 	function selectDate(day: number) {
-		selectedDate = new Date(currentYear, currentMonth, day);
+		selectedDate = new Date(Date.UTC(currentYear, currentMonth, day));
 		if (onDateSelect) {
 			onDateSelect(selectedDate);
 		}
@@ -86,15 +86,16 @@
 	function isDateSelected(day: number): boolean {
 		if (!selectedDate) return false;
 		return (
-			selectedDate.getDate() === day &&
-			selectedDate.getMonth() === currentMonth &&
-			selectedDate.getFullYear() === currentYear
+			selectedDate.getUTCDate() === day &&
+			selectedDate.getUTCMonth() === currentMonth &&
+			selectedDate.getUTCFullYear() === currentYear
 		);
 	}
 
 	function getAlbumForDay(day: number): Album | null {
 		// Create date string in YYYY-MM-DD format for lookup
-		const dateStr = `${currentYear}-${String(currentMonth + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+		const date = new Date(Date.UTC(currentYear, currentMonth, day));
+		const dateStr = date.toISOString().split('T')[0];
 		return albumMap[dateStr] || null;
 	}
 
@@ -105,9 +106,9 @@
 	}
 
 	function isDateInFuture(day: number): boolean {
-		const today = new Date();
-		const currentDate = new Date(currentYear, currentMonth, day);
-		return currentDate > today;
+		const now = Date.now();
+		const currentDate = new Date(Date.UTC(currentYear, currentMonth, day));
+		return currentDate.getTime() > now;
 	}
 
 	// Preload all artwork for the current month

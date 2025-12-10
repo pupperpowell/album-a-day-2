@@ -1,21 +1,21 @@
 <script lang="ts">
-	import { page } from '$app/stores';
+	import { page } from '$app/state';
 	import NewEntryPanel from '$lib/components/NewEntryPanel.svelte';
 	import CalendarPanel from '$lib/components/CalendarPanel.svelte';
 	import AlbumDetailsPanel from '$lib/components/AlbumDetailsPanel.svelte';
 	import UserProfile from '$lib/components/UserProfile.svelte';
 	import type { Album } from '$lib/types/album';
 
-	let user = $derived($page.data.user);
-	let calendarData = $derived($page.data.calendarData);
+	let user = $derived(page.data.user);
+	let calendarData = $derived(page.data.calendarData);
 
 	let isSearchActive = $state(false);
 	let isNewEntryFocused = $state(false);
 	let selectedDate = $state<Date | null>(null);
 	let entryDate = $state<Date | null>(null);
-	let currentMonth = $state(calendarData?.month || new Date().getMonth());
-	let currentYear = $state(calendarData?.year || new Date().getFullYear());
-	let albumMap = $state<Record<string, Album>>(calendarData?.albumMap || {});
+	let currentMonth = $state(new Date().getMonth());
+	let currentYear = $state(new Date().getFullYear());
+	let albumMap = $state<Record<string, Album>>({});
 
 	let handleSearchActiveChange: (active: boolean) => void = (active: boolean) => {
 		isSearchActive = active;
@@ -25,7 +25,9 @@
 		isNewEntryFocused = focused;
 	};
 
-	let albumDetailsRef: { selectAlbum: (album: Album | null) => void } | undefined;
+	let albumDetailsRef = $state<{ selectAlbum: (album: Album | null) => void } | undefined>(
+		undefined
+	);
 
 	function handleDateSelect(date: Date | null) {
 		selectedDate = date;
@@ -43,18 +45,9 @@
 		currentMonth = month;
 		currentYear = year;
 
-		// Fetch new calendar data for the selected month
-		try {
-			const response = await fetch(`/api/calendar?month=${month}&year=${year}`);
-			if (response.ok) {
-				const data = await response.json();
-				if (data.success) {
-					albumMap = data.data.albumMap;
-				}
-			}
-		} catch (error) {
-			console.error('Error fetching calendar data:', error);
-		}
+		// No need to fetch calendar data since we now have all entries in the initial load
+		// The albumMap already contains all user entries, so we just need to update the month/year
+		// The calendar will automatically show the correct entries for the selected month
 	}
 
 	let handleEntryCreated = async () => {
@@ -72,12 +65,31 @@
 		}
 	}
 
+	// Sync initial values from server load
+	$effect(() => {
+		const cd = calendarData;
+		if (cd) {
+			currentMonth = cd.month;
+			currentYear = cd.year;
+			albumMap = cd.albumMap;
+		}
+	});
+
 	// Watch for changes in selectedDate and albumDetailsRef to select the appropriate album
 	$effect(() => {
 		if (selectedDate && albumDetailsRef && albumMap) {
 			const dateKey = selectedDate.toISOString().split('T')[0];
 			const album = albumMap[dateKey];
-			albumDetailsRef.selectAlbum(album || null);
+			albumDetailsRef?.selectAlbum(album || null);
+		}
+	});
+
+	// Watch for albumMap changes and re-trigger album selection if a date is selected
+	$effect(() => {
+		if (selectedDate && albumDetailsRef && albumMap) {
+			const dateKey = selectedDate.toISOString().split('T')[0];
+			const album = albumMap[dateKey];
+			albumDetailsRef?.selectAlbum(album || null);
 		}
 	});
 
