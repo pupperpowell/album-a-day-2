@@ -142,7 +142,7 @@
 					rating: rating,
 					notes: notes,
 					listenDate: listenDate.toISOString(),
-					favoriteTrackId: selectedFavoriteTrack || null
+					favoriteTrackId: selectedFavoriteTrack
 				})
 			});
 

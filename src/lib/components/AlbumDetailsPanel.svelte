@@ -1,5 +1,5 @@
 <script lang="ts">
-	import type { Album } from '$lib/types/album';
+	import type { Album, SpotifyTrack } from '$lib/types/album';
 
 	let {
 		selectedDate = $bindable(null)
@@ -8,6 +8,8 @@
 	} = $props();
 
 	let selectedAlbum = $state<Album | null>(null);
+	let favoriteTrackName = $state('');
+	let isLoadingFavoriteTrack = $state(false);
 
 	function closeDetails() {
 		selectedDate = null;
@@ -24,6 +26,37 @@
 		console.log('Deleting entry:', selectedAlbum);
 	}
 
+	async function loadFavoriteTrack() {
+		if (!selectedAlbum?.favoriteTrackId || !selectedAlbum?.spotifyId) {
+			favoriteTrackName = '';
+			return;
+		}
+
+		const albumId = selectedAlbum.spotifyId!;
+		const favoriteTrackId = selectedAlbum.favoriteTrackId!;
+
+		isLoadingFavoriteTrack = true;
+		try {
+			const response = await fetch(`/api/albums/${albumId}/tracks`);
+			if (!response.ok) {
+				throw new Error('Failed to fetch tracks');
+			}
+			const data = await response.json();
+			const tracks: SpotifyTrack[] = data.album.tracks.items;
+			const track = tracks.find((t) => t.id === favoriteTrackId);
+			if (track) {
+				favoriteTrackName = `${track.track_number}. ${track.name}`;
+			} else {
+				favoriteTrackName = 'Track not available';
+			}
+		} catch (error) {
+			console.error('Error loading favorite track:', error);
+			favoriteTrackName = 'Error loading track';
+		} finally {
+			isLoadingFavoriteTrack = false;
+		}
+	}
+
 	// This function would be called from the calendar when an album is selected
 	export function selectAlbum(album: Album | null) {
 		selectedAlbum = album;
@@ -33,6 +66,14 @@
 	$effect(() => {
 		// This effect is now handled by the parent component
 		// We don't need to automatically clear the album here
+	});
+
+	$effect(() => {
+		if (selectedAlbum) {
+			loadFavoriteTrack();
+		} else {
+			favoriteTrackName = '';
+		}
 	});
 </script>
 
@@ -73,6 +114,19 @@
 										<span class="star" class:filled={i < selectedAlbum.rating}>★</span>
 									{/each}
 								</div>
+							</div>
+						</div>
+
+						<div class="favorite-track">
+							<h4>Favorite Track</h4>
+							<div class="favorite-track-display">
+								{#if isLoadingFavoriteTrack}
+									<span>Loading...</span>
+								{:else if favoriteTrackName}
+									<span class="track-name">{favoriteTrackName}</span>
+								{:else}
+									<span class="no-track">No favorite track selected</span>
+								{/if}
 							</div>
 						</div>
 
@@ -287,6 +341,38 @@
 		border-left: 3px solid #2196f3;
 		white-space: pre-wrap;
 		min-height: 60px;
+	}
+
+	.favorite-track {
+		display: flex;
+		flex-direction: column;
+		gap: 0.5rem;
+	}
+
+	.favorite-track h4 {
+		margin: 0 0 0.5rem 0;
+		font-size: 1rem;
+		color: #333;
+	}
+
+	.favorite-track-display {
+		background-color: #f0f8ff;
+		padding: 0.75rem;
+		border-radius: 4px;
+		border-left: 3px solid #1db954;
+		min-height: 20px;
+	}
+
+	.track-name {
+		font-weight: 500;
+		color: #1db954;
+		font-size: 1rem;
+	}
+
+	.no-track {
+		color: #999;
+		font-style: italic;
+		font-size: 1rem;
 	}
 
 	.actions {
