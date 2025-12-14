@@ -189,13 +189,13 @@
 		display: flex;
 		flex-direction: column;
 		gap: 1rem;
-		height: 100%;
+		flex: 1;
 		padding: 1rem;
+		overflow-y: auto;
 	}
 
 	.empty-panel {
-		height: 100%;
-		/* Just the border from the parent is visible */
+		flex: 1;
 	}
 
 	.album-info {

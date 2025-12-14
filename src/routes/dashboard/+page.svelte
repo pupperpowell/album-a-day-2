@@ -164,7 +164,7 @@
 	<!-- Album Details Panel - Right Side -->
 	{#if showAlbumDetails}
 		<div
-			class="album-details-panel border border-gray-300 rounded-lg p-3 md:p-4 overflow-y-auto flex-none max-h-[300px] md:max-h-none"
+			class="album-details-panel border border-gray-300 rounded-lg p-3 md:p-4 overflow-y-auto flex-1 min-h-0"
 		>
 			<AlbumDetailsPanel {selectedDate} bind:this={albumDetailsRef} />
 		</div>
