@@ -9,7 +9,7 @@
 		selectedDate = $bindable(null),
 		currentMonth = $bindable(new Date().getMonth()),
 		currentYear = $bindable(new Date().getFullYear()),
-		albumMap = {},
+		albumMap = {} as Record<string, Album>,
 		onMonthChange,
 		isNewEntryFocused = false
 	}: {
@@ -113,7 +113,7 @@
 
 	// Preload all artwork for the current month
 	$effect(() => {
-		if (albumMap && Object.keys(albumMap).length > 0) {
+		if (Object.keys(albumMap).length > 0) {
 			const artworkUrls = Object.values(albumMap)
 				.map((album) => album.artwork)
 				.filter(Boolean);
@@ -170,14 +170,6 @@
 			<div class="day-cell empty"></div>
 		{/each}
 	</div>
-
-	<!-- <div class="calendar-info">
-		{#if selectedDate}
-			<p>Selected: {selectedDate.toLocaleDateString()}</p>
-		{:else}
-			<p>Click on a date to see album details</p>
-		{/if}
-	</div> -->
 </div>
 
 <style>
@@ -229,6 +221,7 @@
 	.day-cell.empty {
 		cursor: default;
 		background-color: #f9f9f9;
+		opacity: 0;
 	}
 
 	.day-cell.has-album {

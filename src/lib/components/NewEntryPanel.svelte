@@ -153,6 +153,7 @@
 
 			const result = await response.json();
 			console.log('Entry created successfully:', result);
+			return result;
 
 			// Show success message or handle success state
 			// You could add a toast notification here
@@ -195,7 +196,29 @@
 	}
 
 	async function handleEntryComplete() {
-		await createEntry();
+		try {
+			const result = await createEntry();
+			const entry = result.data.entry;
+			const albumData = result.data.album;
+			const formattedAlbum: Album = {
+				id: albumData.id,
+				name: albumData.name,
+				artist: albumData.artist,
+				artwork: albumData.artwork,
+				releaseDate: albumData.releaseDate,
+				genres: albumData.genres ? JSON.parse(albumData.genres) : [],
+				spotifyId: albumData.spotifyId,
+				spotifyUrl: albumData.spotifyUrl,
+				rating: entry.rating,
+				notes: entry.notes || '',
+				listenDate: new Date(entry.listenDate),
+				favoriteTrackId: entry.favoriteTrackId
+			};
+			onEntryCreated?.(formattedAlbum);
+		} catch (error) {
+			console.error('Failed to create entry:', error);
+			// TODO: show user-facing error message
+		}
 		entryInProgress = false;
 		clearSelection();
 		searchQuery = '';
@@ -204,7 +227,6 @@
 		// Panel loses focus after completing entry
 		isPanelFocused = false;
 		onFocusChange?.(false);
-		onEntryCreated?.();
 	}
 
 	function handleEntryCancel() {

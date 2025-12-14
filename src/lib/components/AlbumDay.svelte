@@ -133,26 +133,15 @@
 		transform: scale(1.2);
 	}
 
-	.album-day:focus {
-		background-color: #ffb74d;
-	}
-
 	.album-day.has-album {
-		/* background-color: #fff3e0; */
-		border-color: #ffb74d;
-	}
-
-	.album-day.selected {
-		background-color: #e3f2fd;
-		border-color: #2196f3;
-		box-shadow: 0 0 0 2px rgba(33, 150, 243, 0.3);
+		border: none;
 	}
 
 	.day-number {
 		/* font-weight: bold; */
 		margin-bottom: 0;
 		font-size: 0.9rem;
-		color: #333;
+		color: #111;
 		position: relative;
 		z-index: 2;
 		background-color: rgba(255, 255, 255, 0.8);

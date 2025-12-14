@@ -1,25 +1,70 @@
-import { redirect } from '@sveltejs/kit';
 import type { PageServerLoad } from './$types';
+import { db } from '$lib/server/db';
+import { user, calendarEntry, album } from '$lib/server/db/schema';
+import { eq } from 'drizzle-orm';
+import { sql } from 'drizzle-orm';
 
 export const load: PageServerLoad = async ({ locals }) => {
-	if (locals.user) {
-		// Check if user has username before redirecting to dashboard
-		const { db } = await import('$lib/server/db');
-		const { user } = await import('$lib/server/db/schema');
-		const { eq } = await import('drizzle-orm');
+	// Get a random user from the database
+	const randomUsers = await db.select({ id: user.id }).from(user).orderBy(sql`RANDOM()`).limit(1);
+	const randomUser = randomUsers[0];
 
-		const userData = await db.select({
-			username: user.username
-		})
-			.from(user)
-			.where(eq(user.id, locals.user.id))
-			.get();
+	let albumMap: Record<string, any> = {};
 
-		// Redirect to signup if user has no username, otherwise to dashboard
-		if (!userData?.username) {
-			throw redirect(302, '/signup');
-		}
-		throw redirect(302, '/dashboard');
+	if (randomUser) {
+		// Fetch calendar entries with album information for the random user
+		const entries = await db
+			.select({
+				id: calendarEntry.id,
+				listenDate: calendarEntry.listenDate,
+				rating: calendarEntry.rating,
+				notes: calendarEntry.notes,
+				favoriteTrackId: calendarEntry.favoriteTrackId,
+				album: {
+					id: album.id,
+					name: album.name,
+					artist: album.artist,
+					artwork: album.artwork,
+					releaseDate: album.releaseDate,
+					genres: album.genres,
+					spotifyId: album.spotifyId,
+					spotifyUrl: album.spotifyUrl
+				}
+			})
+			.from(calendarEntry)
+			.leftJoin(album, eq(calendarEntry.albumId, album.id))
+			.where(eq(calendarEntry.userId, randomUser.id))
+			.orderBy(calendarEntry.listenDate);
+
+		// Parse JSON fields and format entries
+		const formattedEntries = entries.map(entry => ({
+			...entry,
+			album: entry.album ? {
+				...entry.album,
+				genres: entry.album.genres ? JSON.parse(entry.album.genres) : []
+			} : null
+		}));
+
+		// Create a Map for efficient lookup by date string (YYYY-MM-DD)
+		const map = new Map<string, any>();
+		formattedEntries.forEach(entry => {
+			if (entry.album) {
+				const dateKey = entry.listenDate.toISOString().split('T')[0];
+				map.set(dateKey, {
+					...entry.album,
+					rating: entry.rating,
+					notes: entry.notes,
+					listenDate: entry.listenDate,
+					favoriteTrackId: entry.favoriteTrackId
+				});
+			}
+		});
+
+		albumMap = Object.fromEntries(map);
 	}
-	return {};
+
+	return {
+		user: locals.user,
+		albumMap
+	};
 };

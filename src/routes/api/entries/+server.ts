@@ -27,18 +27,20 @@ export const POST: RequestHandler = async ({ request, locals }) => {
 			return error(400, 'Missing required fields: album, listenDate, rating');
 		}
 
-		// Start a transaction to ensure data consistency
-		const result = await db.transaction(async (tx) => {
+		const userId = locals.user!.id;
+
+		// Start a transaction to ensure data consistency (synchronous for better-sqlite3)
+		const result = db.transaction((tx) => {
 			// Check if album already exists (by Spotify ID or by name/artist combination)
 			let existingAlbum = null;
 
 			if (albumData.spotifyId) {
-				existingAlbum = await tx.select().from(album).where(eq(album.spotifyId, albumData.spotifyId)).get();
+				existingAlbum = tx.select().from(album).where(eq(album.spotifyId, albumData.spotifyId)).get();
 			}
 
 			if (!existingAlbum) {
 				// Create new album
-				const newAlbum = await tx.insert(album).values({
+				const newAlbum = tx.insert(album).values({
 					name: albumData.name,
 					artist: albumData.artist,
 					artwork: albumData.artwork,
@@ -54,11 +56,11 @@ export const POST: RequestHandler = async ({ request, locals }) => {
 			// Create tracks if provided
 			if (tracksData && tracksData.length > 0) {
 				// First, delete existing tracks for this album to avoid duplicates
-				await tx.delete(track).where(eq(track.albumId, existingAlbum.id));
+				tx.delete(track).where(eq(track.albumId, existingAlbum.id)).run();
 
 				// Insert new tracks
 				for (const trackData of tracksData) {
-					await tx.insert(track).values({
+					tx.insert(track).values({
 						id: trackData.id,
 						albumId: existingAlbum.id,
 						name: trackData.name,
@@ -68,17 +70,13 @@ export const POST: RequestHandler = async ({ request, locals }) => {
 						previewUrl: trackData.preview_url,
 						spotifyUrl: trackData.external_urls?.spotify,
 						artists: trackData.artists ? JSON.stringify(trackData.artists.map((a: any) => a.name)) : null
-					});
+					}).run();
 				}
 			}
 
 			// Create calendar entry
-			if (!locals.user) {
-				throw new Error('User not authenticated');
-			}
-
-			const newEntry = await tx.insert(calendarEntry).values({
-				userId: locals.user.id,
+			const newEntry = tx.insert(calendarEntry).values({
+				userId,
 				albumId: existingAlbum.id,
 				listenDate: new Date(listenDate),
 				rating: rating,

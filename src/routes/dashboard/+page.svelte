@@ -50,8 +50,12 @@
 		// The calendar will automatically show the correct entries for the selected month
 	}
 
-	let handleEntryCreated = async () => {
-		await handleMonthChange(currentMonth, currentYear);
+	let handleEntryCreated = (newAlbum: Album) => {
+		const dateKey = newAlbum.listenDate.toISOString().split('T')[0];
+		albumMap = {
+			...albumMap,
+			[dateKey]: newAlbum
+		};
 	};
 
 	function handleGlobalClick(event: MouseEvent) {
