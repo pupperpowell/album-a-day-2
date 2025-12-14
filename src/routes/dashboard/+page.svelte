@@ -2,8 +2,8 @@
 	import { page } from '$app/state';
 	import NewEntryPanel from '$lib/components/NewEntryPanel.svelte';
 	import CalendarPanel from '$lib/components/CalendarPanel.svelte';
+	import MobileCalendarPanel from '$lib/components/MobileCalendarPanel.svelte';
 	import AlbumDetailsPanel from '$lib/components/AlbumDetailsPanel.svelte';
-	import UserProfile from '$lib/components/UserProfile.svelte';
 	import type { Album } from '$lib/types/album';
 
 	let user = $derived(page.data.user);
@@ -16,6 +16,20 @@
 	let currentMonth = $state(new Date().getMonth());
 	let currentYear = $state(new Date().getFullYear());
 	let albumMap = $state<Record<string, Album>>({});
+
+	let showMobileCalendar = $derived(!isNewEntryFocused);
+
+	let newEntryPanelClasses = $derived(
+		isNewEntryFocused
+			? 'flex-1 md:flex-none md:max-h-none overflow-y-auto'
+			: 'flex-none max-h-[200px] md:max-h-none overflow-y-auto'
+	);
+
+	let showAlbumDetails = $derived(!isSearchActive && !!selectedDate);
+
+	let gridCols = $derived(
+		showAlbumDetails ? 'md:grid-cols-[1fr_2fr_1fr]' : 'md:grid-cols-[1fr_2fr]'
+	);
 
 	let handleSearchActiveChange: (active: boolean) => void = (active: boolean) => {
 		isSearchActive = active;
@@ -44,10 +58,6 @@
 	async function handleMonthChange(month: number, year: number) {
 		currentMonth = month;
 		currentYear = year;
-
-		// No need to fetch calendar data since we now have all entries in the initial load
-		// The albumMap already contains all user entries, so we just need to update the month/year
-		// The calendar will automatically show the correct entries for the selected month
 	}
 
 	let handleEntryCreated = (newAlbum: Album) => {
@@ -106,27 +116,39 @@
 	});
 </script>
 
-<!-- <div class="dashboard-header">
-	<UserProfile {user} />
-</div> -->
-
 <div
-	class="dashboard-container"
-	class:search-active={isSearchActive}
-	class:has-selected-date={selectedDate}
+	class="dashboard-container flex flex-col md:grid {gridCols} gap-4 h-screen p-4 md:p-8 transition-[grid-template-columns] duration-300"
 >
 	<!-- New Entry Panel - Left Side -->
-	<div class="panel new-entry-panel">
+	<div class="new-entry-panel border border-gray-300 rounded-lg p-3 md:p-4 {newEntryPanelClasses}">
 		<NewEntryPanel
 			onSearchActiveChange={handleSearchActiveChange}
 			onFocusChange={handleNewEntryFocusChange}
 			bind:selectedDate={entryDate}
 			onEntryCreated={handleEntryCreated}
+			{albumMap}
 		/>
 	</div>
 
-	<!-- Calendar Panel - Center -->
-	<div class="panel calendar-panel">
+	<!-- Mobile Calendar Panel - Center -->
+	{#if showMobileCalendar}
+		<div
+			class="block md:hidden calendar-panel border border-gray-300 rounded-lg p-3 md:p-4 overflow-y-auto flex-1 min-h-0"
+		>
+			<MobileCalendarPanel
+				onDateSelect={handleDateSelect}
+				onAlbumSelect={handleAlbumSelect}
+				bind:selectedDate
+				{albumMap}
+				{isNewEntryFocused}
+			/>
+		</div>
+	{/if}
+
+	<!-- Desktop Calendar Panel - Center -->
+	<div
+		class="hidden md:block calendar-panel border border-gray-300 rounded-lg p-3 md:p-4 overflow-y-auto flex-1 min-h-0"
+	>
 		<CalendarPanel
 			onDateSelect={handleDateSelect}
 			onAlbumSelect={handleAlbumSelect}
@@ -140,53 +162,11 @@
 	</div>
 
 	<!-- Album Details Panel - Right Side -->
-	{#if selectedDate}
-		<div class="panel album-details-panel">
+	{#if showAlbumDetails}
+		<div
+			class="album-details-panel border border-gray-300 rounded-lg p-3 md:p-4 overflow-y-auto flex-none max-h-[300px] md:max-h-none"
+		>
 			<AlbumDetailsPanel {selectedDate} bind:this={albumDetailsRef} />
 		</div>
 	{/if}
 </div>
-
-<style>
-	.dashboard-container {
-		display: grid;
-		grid-template-columns: 1fr 2fr 1fr;
-		gap: 1rem;
-		height: 100vh;
-		padding: 2rem;
-		transition: grid-template-columns 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94);
-	}
-
-	.dashboard-container.search-active {
-		grid-template-columns: 1fr 2fr 0fr;
-	}
-
-	.dashboard-container:not(.has-selected-date) {
-		grid-template-columns: 1fr 2fr 0fr;
-	}
-
-	.panel {
-		border: 1px solid #ccc;
-		border-radius: 8px;
-		padding: 1rem;
-		overflow-y: auto;
-	}
-
-	.new-entry-panel {
-		grid-column: 1;
-	}
-
-	.calendar-panel {
-		grid-column: 2;
-	}
-
-	.album-details-panel {
-		grid-column: 3;
-		transition: opacity 0.3s ease;
-	}
-
-	.dashboard-container.search-active .album-details-panel {
-		opacity: 0;
-		pointer-events: none;
-	}
-</style>

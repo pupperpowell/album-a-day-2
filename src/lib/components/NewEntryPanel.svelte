@@ -7,7 +7,8 @@
 		onSearchActiveChange,
 		selectedDate = $bindable(null),
 		onFocusChange,
-		onEntryCreated
+		onEntryCreated,
+		albumMap = {} as Record<string, Album>
 	} = $props();
 	let searchQuery = $state('');
 	let searchResults = $state<SpotifyAlbum[]>([]);
@@ -32,6 +33,9 @@
 	let albumTracks = $state<SpotifyTrack[]>([]);
 	let selectedFavoriteTrack = $state<string>('');
 	let isLoadingTracks = $state(false);
+
+	let dateError = $state<string | null>(null);
+	let inputDateString = $state<string>('');
 
 	// Debounced search function
 	function performSearch() {
@@ -94,6 +98,11 @@
 		performSearch();
 	});
 
+	// Sync inputDateString with listenDateString for mobile date picker
+	$effect(() => {
+		inputDateString = listenDateString;
+	});
+
 	async function handleAlbumSelect(album: SpotifyAlbum) {
 		selectedSpotifyAlbum = album;
 		selectedAlbum = spotifyToAlbum(album);
@@ -103,6 +112,8 @@
 		// Clear the selected date when an album is selected
 		selectedDate = null;
 		listenDate = null;
+		inputDateString = '';
+		dateError = null;
 
 		// Fetch tracks for the selected album
 		await fetchAlbumTracks(album.id);
@@ -173,6 +184,41 @@
 		selectedFavoriteTrack = '';
 		// Reset listen date to selected date or null
 		listenDate = selectedDate || null;
+		inputDateString = '';
+		dateError = null;
+	}
+
+	function validateDate(dateStr: string): boolean {
+		if (!dateStr) {
+			dateError = null;
+			return true;
+		}
+		const dateKey = dateStr;
+		if (albumMap[dateKey]) {
+			dateError = 'An album entry already exists for this date. Please choose another date.';
+			return false;
+		}
+		dateError = null;
+		return true;
+	}
+
+	function handleDateChange(event: Event) {
+		const target = event.target as HTMLInputElement;
+		const dateStr = target.value;
+
+		if (!validateDate(dateStr)) {
+			target.value = '';
+			inputDateString = '';
+			return;
+		}
+		const date = new Date(dateStr + 'T00:00:00');
+		if (isNaN(date.getTime())) {
+			target.value = '';
+			inputDateString = '';
+			return;
+		}
+		listenDate = date;
+		selectedDate = date;
 	}
 
 	function handleSearchInput() {
@@ -275,7 +321,7 @@
 	</div>
 
 	<!-- Search Results -->
-	{#if searchQuery.trim() && searchResults.length > 0 && !selectedAlbum}
+	{#if searchQuery.trim() && !selectedAlbum}
 		<div class="album-selection">
 			<h3>Search Results</h3>
 			<SearchResults
@@ -361,18 +407,35 @@
 
 			<div class="date-listened-section">
 				<label>Date Listened</label>
-				{#if listenDate}
-					<div class="selected-date-display">
-						{listenDate.toLocaleDateString('en-US', {
-							weekday: 'long',
-							year: 'numeric',
-							month: 'long',
-							day: 'numeric'
-						})}
-					</div>
-				{:else}
-					<div class="date-instruction">Click a date on the calendar to select</div>
-				{/if}
+
+				<!-- Mobile Native Date Picker -->
+				<div class="block md:hidden">
+					<input
+						type="date"
+						bind:value={inputDateString}
+						max={new Date().toISOString().split('T')[0]}
+						onchange={handleDateChange}
+					/>
+					{#if dateError}
+						<div class="error-message">{dateError}</div>
+					{/if}
+				</div>
+
+				<!-- Desktop Date Display -->
+				<div class="hidden md:block">
+					{#if listenDate}
+						<div class="selected-date-display">
+							{listenDate.toLocaleDateString('en-US', {
+								weekday: 'long',
+								year: 'numeric',
+								month: 'long',
+								day: 'numeric'
+							})}
+						</div>
+					{:else}
+						<div class="date-instruction">Click a date on the calendar to select</div>
+					{/if}
+				</div>
 			</div>
 
 			<div class="notes-section">
@@ -402,8 +465,8 @@
 	}
 
 	.new-entry-panel.entry-in-progress {
-		border: 2px solid #3498db;
-		border-radius: 8px;
+		/* border: 2px solid #3498db;
+		border-radius: 8px; */
 		background-color: rgba(52, 152, 219, 0.05);
 	}
 
@@ -596,5 +659,26 @@
 	button:disabled {
 		opacity: 0.5;
 		cursor: not-allowed;
+	}
+
+	input[type='date'] {
+		width: 100%;
+		padding: 0.75rem;
+		border: 1px solid #ddd;
+		border-radius: 4px;
+		font-size: 1rem;
+		background-color: white;
+	}
+
+	input[type='date']:focus {
+		outline: none;
+		border-color: #3498db;
+		box-shadow: 0 0 0 2px rgba(52, 152, 219, 0.2);
+	}
+
+	.error-message {
+		color: #ef4444;
+		font-size: 0.875rem;
+		margin-top: 0.25rem;
 	}
 </style>
